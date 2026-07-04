@@ -232,6 +232,13 @@ select:focus {
   border: 1px solid var(--danger);
   color: var(--danger);
 }
+.btn-danger-solid {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
 .btn-start {
   margin-top: auto;
   padding: 18px;
@@ -499,6 +506,43 @@ select:focus {
   color: #fca5a5;
 }
 .stats-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ---------- Modal / confirm dialog ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2, 6, 23, 0.7);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  border-radius: 18px;
+  padding: 22px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.modal-title {
+  margin: 0 0 8px;
+  font-size: 1.3rem;
+}
+.modal-message {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.modal-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;

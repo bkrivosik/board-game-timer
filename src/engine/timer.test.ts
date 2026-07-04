@@ -138,6 +138,44 @@ describe('pause / resume', () => {
     expect(s.status).toBe('running')
     expect(currentTurnMs(s, 12_000)).toBe(5000)
   })
+
+  it('Next while paused commits only pre-pause time and auto-resumes the new player', () => {
+    // Alice thinks 10s, then we pause.
+    let s = startGame(createInitialState(cfg()), 0)
+    s = pause(s, 10_000)
+    expect(s.status).toBe('paused')
+
+    // We sit paused for 30s (real time advances to 40s) and then hit Next.
+    s = next(s, 40_000)
+
+    // Alice is credited exactly her 10s — the 30s paused gap is NOT counted.
+    expect(s.totals['a']).toBe(10_000)
+    expect(s.history[0]).toMatchObject({ playerId: 'a', durationMs: 10_000 })
+
+    // Bob is now the active player, starting from a fresh 0.
+    expect(s.currentIndex).toBe(1)
+    expect(currentPlayer(s)?.id).toBe('b')
+    expect(s.currentTurnBaseMs).toBe(0)
+
+    // Advancing resumes play: the game is running and Bob's clock starts now.
+    expect(s.status).toBe('running')
+    expect(s.turnStartedAt).toBe(40_000)
+    expect(currentTurnMs(s, 43_000)).toBe(3000)
+    expect(playerTotalMs(s, 'b', 43_000)).toBe(3000)
+    expect(playerTotalMs(s, 'a', 43_000)).toBe(10_000)
+  })
+
+  it('Skip while paused discards time and auto-resumes the new player', () => {
+    let s = startGame(createInitialState(cfg()), 0)
+    s = pause(s, 10_000)
+    s = skip(s, 40_000)
+
+    // Skipped player accrues nothing; game resumes on the next player.
+    expect(s.totals['a']).toBe(0)
+    expect(s.currentIndex).toBe(1)
+    expect(s.status).toBe('running')
+    expect(currentTurnMs(s, 42_000)).toBe(2000)
+  })
 })
 
 describe('playerTotalMs', () => {

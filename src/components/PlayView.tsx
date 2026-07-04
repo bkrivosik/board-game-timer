@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import type { GameState } from '../engine/types'
 import type { GameActions } from '../state/useGame'
 import {
@@ -12,6 +12,7 @@ import {
 import { formatMs } from '../util/format'
 import { PieChart } from './PieChart'
 import { Controls } from './Controls'
+import { ConfirmDialog } from './ConfirmDialog'
 
 interface Props {
   state: GameState
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function PlayView({ state, now, actions }: Props) {
+  const [confirmingEnd, setConfirmingEnd] = useState(false)
   const player = currentPlayer(state)
   if (!player) return null
 
@@ -85,8 +87,23 @@ export function PlayView({ state, now, actions }: Props) {
         onNext={actions.next}
         onSkip={actions.skip}
         onPauseResume={paused ? actions.resume : actions.pause}
-        onEnd={actions.end}
+        onEnd={() => setConfirmingEnd(true)}
       />
+
+      {confirmingEnd && (
+        <ConfirmDialog
+          title="End game?"
+          message="This finishes the game and shows the final statistics. You can't return to the current game afterwards."
+          confirmLabel="End game"
+          cancelLabel="Keep playing"
+          danger
+          onConfirm={() => {
+            setConfirmingEnd(false)
+            actions.end()
+          }}
+          onCancel={() => setConfirmingEnd(false)}
+        />
+      )}
     </div>
   )
 }

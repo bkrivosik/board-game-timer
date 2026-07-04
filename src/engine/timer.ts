@@ -105,7 +105,12 @@ function makeRecord(state: GameState, durationMs: number): TurnRecord {
   }
 }
 
-/** Commit the current turn and advance to the next player. */
+/**
+ * Commit the current turn and advance to the next player. The committed
+ * duration is read before any status change, so time is frozen correctly when
+ * called while paused. Advancing always resumes play: the new player's clock
+ * starts running immediately even if the game was paused.
+ */
 export function next(state: GameState, now: number): GameState {
   if (state.status !== 'running' && state.status !== 'paused') return state
   if (state.config.players.length === 0) return state
@@ -113,26 +118,32 @@ export function next(state: GameState, now: number): GameState {
   const record = makeRecord(state, duration)
   return {
     ...state,
+    status: 'running',
     totals: { ...state.totals, [record.playerId]: (state.totals[record.playerId] ?? 0) + duration },
     history: [...state.history, record],
     undoStack: [...state.undoStack, { type: 'next', prevIndex: state.currentIndex, record }],
     currentIndex: nextIndex(state),
     currentTurnBaseMs: 0,
-    turnStartedAt: state.status === 'running' ? now : null,
+    turnStartedAt: now,
   }
 }
 
-/** Skip the current player: discard their in-progress turn time and advance. */
+/**
+ * Skip the current player: discard their in-progress turn time and advance.
+ * Like `next`, advancing resumes play — the new player's clock starts running
+ * even if the game was paused.
+ */
 export function skip(state: GameState, now: number): GameState {
   if (state.status !== 'running' && state.status !== 'paused') return state
   if (state.config.players.length === 0) return state
   const discardedMs = currentTurnMs(state, now)
   return {
     ...state,
+    status: 'running',
     undoStack: [...state.undoStack, { type: 'skip', prevIndex: state.currentIndex, discardedMs }],
     currentIndex: nextIndex(state),
     currentTurnBaseMs: 0,
-    turnStartedAt: state.status === 'running' ? now : null,
+    turnStartedAt: now,
   }
 }
 
